@@ -1,0 +1,15 @@
+# Arquivos de ambiente e senhas
+.env
+*.env
+
+# Cache do Python / Django (se usarem Python)
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Dependências do Node (se usarem Node/React/Vue)
+node_modules/
+
+# Configurações de IDEs (VS Code, PyCharm)
+.vscode/
+.idea/
