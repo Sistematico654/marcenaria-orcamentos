@@ -84,9 +84,11 @@ $result = $conn->query("SELECT * FROM clientes ORDER BY id DESC");
                         <td><?= htmlspecialchars($row['telefone']); ?></td>
                         <td><?= htmlspecialchars($row['email']); ?></td>
                         <td><?= htmlspecialchars($row['endereco']); ?></td>
-                        <td>
-                            <a href="editar_cliente.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-warning">Editar</a>
-                            <a href="excluir_cliente.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir?');">Excluir</a>
+                        <td class="text-nowrap">
+                            <div class="d-inline-flex gap-1">
+                                <a href="editar_cliente.php?id=<?php echo $c['id']; ?>" class="btn btn-sm btn-warning">Editar</a>
+                                <a href="excluir_cliente.php?id=<?php echo $c['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Deseja realmente excluir este cliente?');">Excluir</a>
+                            </div>
                         </td>
                     </tr>
                     <?php endwhile; ?>
