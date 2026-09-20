@@ -2,7 +2,7 @@
 include 'conexao.php';
 
 // Consulta para trazer orçamentos com dados do cliente (incluindo e-mail e telefone para envio)
-$sql = "SELECT o.id, c.nome AS cliente_nome, c.email, c.telefone, s.nome_servico, o.quantidade, o.valor_total, o.data_orcamento, o.status 
+$sql = "SELECT o.id, c.nome AS cliente_nome, c.email, c.telefone, s.nome_servico, o.quantidade, o.valor_total, o.data_orcamento, o.status
         FROM orcamentos o
         INNER JOIN clientes c ON o.cliente_id = c.id
         INNER JOIN servicos s ON o.servico_id = s.id
@@ -32,7 +32,7 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
 <body class="bg-light">
 
     <div class="container mt-5 mb-5">
-        
+       
         <?php if (isset($_GET['sucesso'])): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 Status do orçamento atualizado com sucesso!
@@ -62,6 +62,11 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
             </div>
         </div>
 
+        <!-- Campo de busca dinamica via JavaScript -->
+        <div class="mb-3">
+            <input type="text" id="campoBusca" class="form-control" placeholder="🔍 Digitar para filtrar orçamentos por cliente, serviço ou status...">
+        </div>
+
         <div class="card shadow border-0">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
                 <h3 class="mb-0 fs-4">📋 Gestão de Orçamentos</h3>
@@ -70,7 +75,7 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
                     <a href="index.php" class="btn btn-outline-light btn-sm ms-1">Voltar ao Menu</a>
                 </div>
             </div>
-            
+           
             <div class="card-body p-4">
                 <div class="table-responsive">
                     <table class="table table-hover table-striped align-middle" aria-label="Tabela do Histórico de Orçamentos">
@@ -90,13 +95,29 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
                         <tbody>
                             <?php if (mysqli_num_rows($resultado) > 0): ?>
                                 <?php while ($row = mysqli_fetch_assoc($resultado)): ?>
-                                    <?php 
+                                    <?php
                                         $num_tel = preg_replace('/\D/', '', $row['telefone'] ?? '');
-                                        $msg_whats = "Olá " . urlencode($row['cliente_nome']) . ", segue o seu orçamento para " . urlencode($row['nome_servico']) . " no valor total de R$ " . number_format($row['valor_total'], 2, ',', '.') . ". Qualquer dúvida estamos à disposição!";
-                                        $link_whats = "https://api.whatsapp.com/send?phone=55" . $num_tel . "&text=" . $msg_whats;
-                                        
-                                        $assunto_email = rawurlencode("Orçamento Marcenaria - #" . $row['id']);
-                                        $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nConforme solicitado, segue o orçamento do serviço: " . $row['nome_servico'] . ".\nValor Total: R$ " . number_format($row['valor_total'], 2, ',', '.') . "\n\nFicamos no aguardo da sua aprovação.");
+                                        $status_atual = !empty($row['status']) ? $row['status'] : 'Pendente';
+
+                                        // Personaliza as mensagens de acordo com o Status do Orçamento
+                                        if ($status_atual == 'Aprovado') {
+                                            $texto_whats = "Olá " . urlencode($row['cliente_nome']) . ", seu orçamento para " . urlencode($row['nome_servico']) . " (R$ " . number_format($row['valor_total'], 2, ',', '.') . ") foi aprovado! Seu pedido já entrou em produção em nossa marcenaria.";
+                                            
+                                            $assunto_email = rawurlencode("Confirmação de Produção - Orçamento #" . $row['id']);
+                                            $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nConfirmamos o recebimento e aprovação do seu orçamento para o serviço: " . $row['nome_servico'] . ".\n\nSeu pedido já entrou em produção! Qualquer novidade sobre o andamento entraremos em contato.\n\nAtenciosamente,\nMarcenaria");
+                                        } elseif ($status_atual == 'Rejeitado') {
+                                            $texto_whats = "Olá " . urlencode($row['cliente_nome']) . ", confirmamos o cancelamento da proposta para " . urlencode($row['nome_servico']) . ". Permanecemos à disposição para futuros projetos!";
+                                            
+                                            $assunto_email = rawurlencode("Atualização de Orçamento - #" . $row['id']);
+                                            $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nInformamos que o orçamento para o serviço " . $row['nome_servico'] . " foi arquivado/cancelado.\n\nFicamos à disposição para futuros projetos.");
+                                        } else {
+                                            $texto_whats = "Olá " . urlencode($row['cliente_nome']) . ", segue o seu orçamento para " . urlencode($row['nome_servico']) . " no valor total de R$ " . number_format($row['valor_total'], 2, ',', '.') . ". Qualquer dúvida, estamos à disposição!";
+                                            
+                                            $assunto_email = rawurlencode("Orçamento Marcenaria - #" . $row['id']);
+                                            $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nConforme solicitado, segue o orçamento do serviço: " . $row['nome_servico'] . ".\nValor Total: R$ " . number_format($row['valor_total'], 2, ',', '.') . "\n\nQualquer dúvida, estamos à disposição.");
+                                        }
+
+                                        $link_whats = "https://api.whatsapp.com/send?phone=55" . $num_tel . "&text=" . $texto_whats;
                                         $link_email = "mailto:" . $row['email'] . "?subject=" . $assunto_email . "&body=" . $corpo_email;
                                     ?>
                                     <tr>
@@ -111,11 +132,10 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
                                             <?php echo date('d/m/Y', strtotime($row['data_orcamento'])); ?>
                                         </td>
                                         <td class="text-center">
-                                            <?php 
-                                                $status = !empty($row['status']) ? $row['status'] : 'Pendente';
-                                                if ($status == 'Aprovado') {
+                                            <?php
+                                                if ($status_atual == 'Aprovado') {
                                                     echo '<span class="badge bg-success">Aprovado</span>';
-                                                } elseif ($status == 'Rejeitado') {
+                                                } elseif ($status_atual == 'Rejeitado') {
                                                     echo '<span class="badge bg-danger">Rejeitado</span>';
                                                 } else {
                                                     echo '<span class="badge bg-warning text-dark">Pendente</span>';
@@ -124,13 +144,13 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
                                         </td>
                                         <td class="text-center">
                                             <div class="d-inline-flex gap-1">
-                                                <?php if ($status != 'Aprovado'): ?>
-                                                    <a href="atualizar_status_orcamento.php?id=<?php echo $row['id']; ?>&status=Aprovado" 
+                                                <?php if ($status_atual != 'Aprovado'): ?>
+                                                    <a href="atualizar_status_orcamento.php?id=<?php echo $row['id']; ?>&status=Aprovado"
                                                        class="btn btn-sm btn-success">Aprovar</a>
                                                 <?php endif; ?>
 
-                                                <?php if ($status != 'Rejeitado'): ?>
-                                                    <a href="atualizar_status_orcamento.php?id=<?php echo $row['id']; ?>&status=Rejeitado" 
+                                                <?php if ($status_atual != 'Rejeitado'): ?>
+                                                    <a href="atualizar_status_orcamento.php?id=<?php echo $row['id']; ?>&status=Rejeitado"
                                                        class="btn btn-sm btn-danger">Rejeitar</a>
                                                 <?php endif; ?>
                                             </div>
@@ -164,5 +184,7 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Script personalizado JavaScript para atender ao criterio do projeto -->
+    <script src="script.js"></script>
 </body>
 </html>
