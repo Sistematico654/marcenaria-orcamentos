@@ -63,10 +63,10 @@ $servicos = mysqli_query($conn, "SELECT id, nome_servico, preco_base FROM servic
 
                     <div class="mb-3">
                         <label class="form-label">Serviço / Item:</label>
-                        <select name="servico_id" class="form-select" required>
-                            <option value="">Selecione o Serviço</option>
+                        <select id="servico_id" name="servico_id" class="form-select" onchange="calcularTotal()" required>
+                            <option value="" data-preco="0">Selecione o Serviço</option>
                             <?php while ($s = mysqli_fetch_assoc($servicos)): ?>
-                                <option value="<?php echo $s['id']; ?>">
+                                <option value="<?php echo $s['id']; ?>" data-preco="<?php echo $s['preco_base']; ?>">
                                     <?php echo htmlspecialchars($s['nome_servico']) . " (R$ " . number_format($s['preco_base'], 2, ',', '.') . ")"; ?>
                                 </option>
                             <?php endwhile; ?>
@@ -75,14 +75,36 @@ $servicos = mysqli_query($conn, "SELECT id, nome_servico, preco_base FROM servic
 
                     <div class="mb-3">
                         <label class="form-label">Quantidade:</label>
-                        <input type="number" name="quantidade" class="form-control" value="1" min="1" required>
+                        <input type="number" id="quantidade" name="quantidade" class="form-control" value="1" min="1" oninput="calcularTotal()" required>
                     </div>
 
-                    <button type="submit" class="btn btn-success">Calcular e Gerar Orçamento</button>
+                    <!-- Exibição prévia do valor total em tempo real -->
+                    <div class="alert alert-info fw-bold fs-5">
+                        Valor Total Estimado: <span id="valor_total_preview">R$ 0,00</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Salvar e Registrar Orçamento</button>
                     <a href="index.php" class="btn btn-secondary">Voltar ao Menu</a>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- Script JavaScript / Cálculo Dinâmico -->
+    <script>
+    function calcularTotal() {
+        const selectServico = document.getElementById('servico_id');
+        const inputQuantidade = document.getElementById('quantidade');
+        const previewTotal = document.getElementById('valor_total_preview');
+
+        const optionSelecionada = selectServico.options[selectServico.selectedIndex];
+        const precoBase = parseFloat(optionSelecionada.getAttribute('data-preco')) || 0;
+        const quantidade = parseInt(inputQuantidade.value) || 0;
+
+        const total = precoBase * quantidade;
+
+        previewTotal.innerText = "R$ " + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    </script>
 </body>
 </html>

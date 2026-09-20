@@ -1,14 +1,21 @@
 <?php
 include 'conexao.php';
 
-if (isset($_GET['id']) && isset($_GET['novo_status'])) {
-    $id = $_GET['id'];
-    $novo_status = $_GET['novo_status'];
+if (isset($_GET['id']) && isset($_GET['status'])) {
+    $id = intval($_GET['id']);
+    $status = mysqli_real_escape_string($conn, $_GET['status']);
 
-    $sql = "UPDATE orcamentos SET status = '$novo_status' WHERE id = '$id'";
-    mysqli_query($conn, $sql);
+    // Atualiza o status do orçamento no banco de dados
+    $sql = "UPDATE orcamentos SET status = '$status' WHERE id = $id";
+    
+    if (mysqli_query($conn, $sql)) {
+        header("Location: listar_orcamentos.php?sucesso=1");
+        exit();
+    } else {
+        echo "Erro ao atualizar status: " . mysqli_error($conn);
+    }
+} else {
+    header("Location: listar_orcamentos.php");
+    exit();
 }
-
-header("Location: listar_orcamentos.php");
-exit();
 ?>
