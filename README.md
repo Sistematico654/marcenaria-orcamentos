@@ -18,6 +18,6 @@ Francisco Valberto dos Santos Neto
 
 ## 🛠️ Tecnologias
 * Python / Django
-* JavaScript
+* JavaScript / PHP
 * HTML5 & CSS3
 * PostgreSQL / MySQL
