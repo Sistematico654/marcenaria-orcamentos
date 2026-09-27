@@ -1,19 +1,23 @@
 FROM php:8.2-apache
 
-# Instala a extensão mysqli
+# Instala a extensão mysqli para o MySQL
 RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
 
-# Desativa módulos MPM conflitantes e ativa o prefork + rewrite
-RUN a2dismod mpm_event mpm_worker || true \
-    && a2enmod mpm_prefork rewrite
+# Remove fisicamente qualquer configuração de MPM para evitar duplicados e ativa o prefork + rewrite
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
+    && ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/ \
+    && ln -s /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/ \
+    && a2enmod rewrite
 
-# Altera a porta do Apache de 80 para 8080 no arquivo de configuração
+# Ajusta o Apache para escutar na porta 8080 exigida pelo Railway
 RUN sed -i 's/80/8080/g' /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
 
-# Copia os arquivos do projeto
+# Copia os ficheiros da aplicação
 COPY . /var/www/html/
 
-# Ajusta permissões
+# Configura as permissões de acesso
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 8080
+
+CMD ["apache2-foreground"]
