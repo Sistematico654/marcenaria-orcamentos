@@ -22,9 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 VALUES ('$cliente_id', '$servico_id', '$quantidade', '$valor_total', '$data_orcamento')";
 
         if (mysqli_query($conn, $sql)) {
-            $mensagem = "<div class='alert alert-success'>Orçamento gerado com sucesso! Valor Total: R$ " . number_format($valor_total, 2, ',', '.') . "</div>";
+            $mensagem = "<div class='alert alert-success' role='alert'>Orçamento gerado com sucesso! Valor Total: R$ " . number_format($valor_total, 2, ',', '.') . "</div>";
         } else {
-            $mensagem = "<div class='alert alert-danger'>Erro ao gerar orçamento: " . mysqli_error($conn) . "</div>";
+            $mensagem = "<div class='alert alert-danger' role='alert'>Erro ao gerar orçamento: " . mysqli_error($conn) . "</div>";
         }
     }
 }
@@ -38,21 +38,24 @@ $servicos = mysqli_query($conn, "SELECT id, nome_servico, preco_base FROM servic
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerar Orçamento - Marcenaria</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    <div class="container mt-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">Gerar Novo Orçamento</h3>
+    <!-- Ajustado py-3 e py-md-5 para otimizar o espaço vertical no celular -->
+    <div class="container py-3 py-md-5">
+        <div class="card shadow border-0">
+            <!-- Título responsivo e padding ajustado -->
+            <div class="card-header bg-primary text-white py-3">
+                <h3 class="mb-0 fs-5 fs-md-3 fw-bold">📄 Gerar Novo Orçamento</h3>
             </div>
-            <div class="card-body">
+            <div class="card-body p-3 p-md-4">
                 <?php echo $mensagem; ?>
 
                 <form method="POST" action="">
                     <div class="mb-3">
-                        <label class="form-label">Cliente:</label>
+                        <label class="form-label fw-bold">Cliente:</label>
                         <select name="cliente_id" class="form-select" required>
                             <option value="">Selecione o Cliente</option>
                             <?php while ($c = mysqli_fetch_assoc($clientes)): ?>
@@ -62,7 +65,7 @@ $servicos = mysqli_query($conn, "SELECT id, nome_servico, preco_base FROM servic
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Serviço / Item:</label>
+                        <label class="form-label fw-bold">Serviço / Item:</label>
                         <select id="servico_id" name="servico_id" class="form-select" onchange="calcularTotal()" required>
                             <option value="" data-preco="0">Selecione o Serviço</option>
                             <?php while ($s = mysqli_fetch_assoc($servicos)): ?>
@@ -74,23 +77,26 @@ $servicos = mysqli_query($conn, "SELECT id, nome_servico, preco_base FROM servic
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Quantidade:</label>
+                        <label class="form-label fw-bold">Quantidade:</label>
                         <input type="number" id="quantidade" name="quantidade" class="form-control" value="1" min="1" oninput="calcularTotal()" required>
                     </div>
 
                     <!-- Exibição prévia do valor total em tempo real -->
-                    <div class="alert alert-info fw-bold fs-5">
+                    <div class="alert alert-info fw-bold fs-6 fs-md-5">
                         Valor Total Estimado: <span id="valor_total_preview">R$ 0,00</span>
                     </div>
 
-                    <button type="submit" class="btn btn-success">Salvar e Registrar Orçamento</button>
-                    <a href="index.php" class="btn btn-secondary">Voltar ao Menu</a>
+                    <!-- d-grid faz o botão ocupar a largura ideal em telas mobile -->
+                    <div class="d-grid d-md-flex gap-2">
+                        <button type="submit" class="btn btn-success">Salvar e Registrar Orçamento</button>
+                        <a href="index.php" class="btn btn-secondary">Voltar ao Menu</a>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Script JavaScript / Cálculo Dinâmico -->
+    <!-- Script JavaScript / Cálculo Dinâmico (Mantido idêntico ao original) -->
     <script>
     function calcularTotal() {
         const selectServico = document.getElementById('servico_id');
