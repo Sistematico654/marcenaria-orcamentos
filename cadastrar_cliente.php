@@ -33,10 +33,10 @@ $clientes = mysqli_query($conn, "SELECT * FROM clientes ORDER BY id DESC");
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    <!-- Ajustado py-3 e py-md-5 para otimizar o espaço no celular -->
+    <!-- Ajustado py-3 e py-md-5 para otimizar o espaço vertical no celular -->
     <div class="container py-3 py-md-5">
         <div class="card shadow mb-4 border-0">
-            <!-- Título com tamanho responsivo (fs-5 no celular, fs-3 no PC) para não ficar pequeno -->
+            <!-- Título responsivo (não fica miúdo no celular) -->
             <div class="card-header bg-primary text-white py-3">
                 <h3 class="mb-0 fs-5 fs-md-3 fw-bold">👤 Cadastrar Novo Cliente</h3>
             </div>
@@ -45,6 +45,7 @@ $clientes = mysqli_query($conn, "SELECT * FROM clientes ORDER BY id DESC");
 
                 <form method="POST" action="">
                     <div class="row">
+                        <!-- col-12 garante que ocupa a largura toda no celular -->
                         <div class="col-12 col-md-6 mb-3">
                             <label class="form-label fw-bold">Nome Completo:</label>
                             <input type="text" name="nome" class="form-control" required>
@@ -71,7 +72,7 @@ $clientes = mysqli_query($conn, "SELECT * FROM clientes ORDER BY id DESC");
                         </div>
                     </div>
 
-                    <!-- Botão com d-grid para ocupar a largura correta no celular -->
+                    <!-- d-grid faz o botão ocupar a largura ideal no celular -->
                     <div class="d-grid d-md-flex gap-2">
                         <button type="submit" class="btn btn-success">Salvar Cliente</button>
                         <a href="index.php" class="btn btn-secondary">Voltar ao Menu</a>
@@ -97,27 +98,21 @@ $clientes = mysqli_query($conn, "SELECT * FROM clientes ORDER BY id DESC");
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (mysqli_num_rows($clientes) > 0): ?>
-                                <?php while ($c = mysqli_fetch_assoc($clientes)): ?>
-                                    <tr>
-                                        <td><?php echo $c['id']; ?></td>
-                                        <td><?php echo htmlspecialchars($c['nome']); ?></td>
-                                        <td><?php echo htmlspecialchars($c['telefone']); ?></td>
-                                        <td><?php echo htmlspecialchars($c['email']); ?></td>
-                                        <td><?php echo htmlspecialchars($c['endereco']); ?></td>
-                                        <td class="text-nowrap">
-                                            <div class="d-inline-flex gap-1">
-                                                <a href="editar_cliente.php?id=<?php echo $c['id']; ?>" class="btn btn-sm btn-warning">Editar</a>
-                                                <a href="excluir_cliente.php?id=<?php echo $c['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Deseja realmente excluir este cliente?');">Excluir</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
+                            <?php while ($c = mysqli_fetch_assoc($clientes)): ?>
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-3">Nenhum cliente cadastrado.</td>
+                                    <td><?php echo $c['id']; ?></td>
+                                    <td><?php echo htmlspecialchars($c['nome']); ?></td>
+                                    <td><?php echo htmlspecialchars($c['telefone']); ?></td>
+                                    <td><?php echo htmlspecialchars($c['email']); ?></td>
+                                    <td><?php echo htmlspecialchars($c['endereco']); ?></td>
+                                    <td class="text-nowrap">
+                                        <div class="d-inline-flex gap-1">
+                                            <a href="editar_cliente.php?id=<?php echo $c['id']; ?>" class="btn btn-sm btn-warning">Editar</a>
+                                            <a href="excluir_cliente.php?id=<?php echo $c['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Deseja realmente excluir este cliente?');">Excluir</a>
+                                        </div>
+                                    </td>
                                 </tr>
-                            <?php endif; ?>
+                            <?php endwhile; ?>
                         </tbody>
                     </table>
                 </div>
@@ -125,7 +120,7 @@ $clientes = mysqli_query($conn, "SELECT * FROM clientes ORDER BY id DESC");
         </div>
     </div>
 
-    <!-- Script JavaScript / Consumo de API ViaCEP (Mantido exatamente como o seu original) -->
+    <!-- Script JavaScript / Consumo de API ViaCEP (Sua função original restaurada) -->
     <script>
     function buscarCEP() {
         let cep = document.getElementById('cep').value.replace(/\D/g, '');
