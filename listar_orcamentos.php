@@ -31,7 +31,8 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
 </head>
 <body class="bg-light">
 
-    <div class="container mt-5 mb-5">
+    <!-- Espaçamento responsivo py-3 e py-md-5 -->
+    <div class="container py-3 py-md-5">
        
         <?php if (isset($_GET['sucesso'])): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -40,45 +41,46 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
             </div>
         <?php endif; ?>
 
-        <!-- Painel Resumo de Utilidade do Status -->
+        <!-- Painel Resumo de Utilidade do Status (col-12 para mobile, col-md-6 para PC) -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-12 col-md-6 mb-3 mb-md-0">
                 <div class="card bg-success text-white shadow border-0">
                     <div class="card-body">
-                        <h5 class="card-title">💰 Receita Aprovada (Em Produção)</h5>
-                        <h3 class="fw-bold mb-0">R$ <?php echo number_format($total_aprovado, 2, ',', '.'); ?></h3>
+                        <h5 class="card-title fs-6 fs-md-5">💰 Receita Aprovada (Em Produção)</h5>
+                        <h3 class="fw-bold mb-0 fs-4 fs-md-3">R$ <?php echo number_format($total_aprovado, 2, ',', '.'); ?></h3>
                         <small><?php echo $qtd_aprovado; ?> orçamento(s) aprovado(s)</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="card bg-warning text-dark shadow border-0">
                     <div class="card-body">
-                        <h5 class="card-title">⏳ Orçamentos Pendentes</h5>
-                        <h3 class="fw-bold mb-0"><?php echo $qtd_pendente; ?> em negociação</h3>
+                        <h5 class="card-title fs-6 fs-md-5">⏳ Orçamentos Pendentes</h5>
+                        <h3 class="fw-bold mb-0 fs-4 fs-md-3"><?php echo $qtd_pendente; ?> em negociação</h3>
                         <small>Aguardando resposta do cliente</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Campo de busca dinamica via JavaScript -->
+        <!-- Campo de busca dinâmica -->
         <div class="mb-3">
             <input type="text" id="campoBusca" class="form-control" placeholder="🔍 Digitar para filtrar orçamentos por cliente, serviço ou status...">
         </div>
 
         <div class="card shadow border-0">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-                <h3 class="mb-0 fs-4">📋 Gestão de Orçamentos</h3>
-                <div>
+            <!-- Cabeçalho reorganizado para empilhar no celular se necessário -->
+            <div class="card-header bg-primary text-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 py-3">
+                <h3 class="mb-0 fs-5 fs-md-4 fw-bold">📋 Gestão de Orçamentos</h3>
+                <div class="d-flex gap-1">
                     <a href="gerar_orcamento.php" class="btn btn-light btn-sm fw-bold">Novo Orçamento</a>
-                    <a href="index.php" class="btn btn-outline-light btn-sm ms-1">Voltar ao Menu</a>
+                    <a href="index.php" class="btn btn-outline-light btn-sm">Voltar ao Menu</a>
                 </div>
             </div>
            
-            <div class="card-body p-4">
+            <div class="card-body p-3 p-md-4">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped align-middle" aria-label="Tabela do Histórico de Orçamentos">
+                    <table class="table table-hover table-striped align-middle" id="tabelaOrcamentos" aria-label="Tabela do Histórico de Orçamentos">
                         <thead class="table-dark">
                             <tr>
                                 <th scope="col"># ID</th>
@@ -99,20 +101,19 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
                                         $num_tel = preg_replace('/\D/', '', $row['telefone'] ?? '');
                                         $status_atual = !empty($row['status']) ? $row['status'] : 'Pendente';
 
-                                        // Personaliza as mensagens de acordo com o Status do Orçamento
                                         if ($status_atual == 'Aprovado') {
                                             $texto_whats = "Olá " . urlencode($row['cliente_nome']) . ", seu orçamento para " . urlencode($row['nome_servico']) . " (R$ " . number_format($row['valor_total'], 2, ',', '.') . ") foi aprovado! Seu pedido já entrou em produção em nossa marcenaria.";
-                                            
+                                           
                                             $assunto_email = rawurlencode("Confirmação de Produção - Orçamento #" . $row['id']);
                                             $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nConfirmamos o recebimento e aprovação do seu orçamento para o serviço: " . $row['nome_servico'] . ".\n\nSeu pedido já entrou em produção! Qualquer novidade sobre o andamento entraremos em contato.\n\nAtenciosamente,\nMarcenaria");
                                         } elseif ($status_atual == 'Rejeitado') {
                                             $texto_whats = "Olá " . urlencode($row['cliente_nome']) . ", confirmamos o cancelamento da proposta para " . urlencode($row['nome_servico']) . ". Permanecemos à disposição para futuros projetos!";
-                                            
+                                           
                                             $assunto_email = rawurlencode("Atualização de Orçamento - #" . $row['id']);
                                             $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nInformamos que o orçamento para o serviço " . $row['nome_servico'] . " foi arquivado/cancelado.\n\nFicamos à disposição para futuros projetos.");
                                         } else {
                                             $texto_whats = "Olá " . urlencode($row['cliente_nome']) . ", segue o seu orçamento para " . urlencode($row['nome_servico']) . " no valor total de R$ " . number_format($row['valor_total'], 2, ',', '.') . ". Qualquer dúvida, estamos à disposição!";
-                                            
+                                           
                                             $assunto_email = rawurlencode("Orçamento Marcenaria - #" . $row['id']);
                                             $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nConforme solicitado, segue o orçamento do serviço: " . $row['nome_servico'] . ".\nValor Total: R$ " . number_format($row['valor_total'], 2, ',', '.') . "\n\nQualquer dúvida, estamos à disposição.");
                                         }
@@ -125,10 +126,10 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
                                         <td><?php echo htmlspecialchars($row['cliente_nome']); ?></td>
                                         <td><?php echo htmlspecialchars($row['nome_servico']); ?></td>
                                         <td class="text-center"><?php echo $row['quantidade']; ?></td>
-                                        <td class="text-end fw-bold text-success">
+                                        <td class="text-end fw-bold text-success text-nowrap">
                                             R$ <?php echo number_format($row['valor_total'], 2, ',', '.'); ?>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center text-nowrap">
                                             <?php echo date('d/m/Y', strtotime($row['data_orcamento'])); ?>
                                         </td>
                                         <td class="text-center">
@@ -184,7 +185,22 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Script personalizado JavaScript para atender ao criterio do projeto -->
-    <script src="script.js"></script>
+    
+    <!-- Script de Busca Dinâmica em Tempo Real -->
+    <script>
+    document.getElementById('campoBusca').addEventListener('keyup', function() {
+        let termo = this.value.toLowerCase();
+        let linhas = document.querySelectorAll('#tabelaOrcamentos tbody tr');
+
+        linhas.forEach(linha => {
+            let textoLinha = linha.textContent.toLowerCase();
+            if (textoLinha.includes(termo)) {
+                linha.style.display = '';
+            } else {
+                linha.style.display = 'none';
+            }
+        });
+    });
+    </script>
 </body>
 </html>
