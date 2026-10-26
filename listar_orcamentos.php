@@ -10,7 +10,7 @@ $sql = "SELECT o.id, c.nome AS cliente_nome, c.email, c.telefone, s.nome_servico
 
 $resultado = mysqli_query($conn, $sql);
 
-// Indicadores do Status
+// Indicadores do Status para o Painel Superior
 $res_aprovados = mysqli_query($conn, "SELECT SUM(valor_total) as total, COUNT(*) as qtd FROM orcamentos WHERE status = 'Aprovado'");
 $row_aprovados = mysqli_fetch_assoc($res_aprovados);
 $total_aprovado = $row_aprovados['total'] ?? 0;
@@ -28,25 +28,25 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Histórico e Gestão de Orçamentos - Marcenaria</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
 
-    <!-- Espaçamento responsivo py-3 e py-md-5 -->
     <div class="container py-3 py-md-5">
        
         <?php if (isset($_GET['sucesso'])): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                Status do orçamento atualizado com sucesso!
+                Ação realizada com sucesso!
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
 
-        <!-- Painel Resumo de Utilidade do Status (col-12 para mobile, col-md-6 para PC) -->
+        <!-- Painel Resumo de Status -->
         <div class="row mb-4">
             <div class="col-12 col-md-6 mb-3 mb-md-0">
                 <div class="card bg-success text-white shadow border-0">
                     <div class="card-body">
-                        <h5 class="card-title fs-6 fs-md-5">💰 Receita Aprovada (Em Produção)</h5>
+                        <h5 class="card-title fs-6 fs-md-5">💰 Receita Aprovada (Pronto para Entrega)</h5>
                         <h3 class="fw-bold mb-0 fs-4 fs-md-3">R$ <?php echo number_format($total_aprovado, 2, ',', '.'); ?></h3>
                         <small><?php echo $qtd_aprovado; ?> orçamento(s) aprovado(s)</small>
                     </div>
@@ -57,7 +57,7 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
                     <div class="card-body">
                         <h5 class="card-title fs-6 fs-md-5">⏳ Orçamentos Pendentes</h5>
                         <h3 class="fw-bold mb-0 fs-4 fs-md-3"><?php echo $qtd_pendente; ?> em negociação</h3>
-                        <small>Aguardando resposta do cliente</small>
+                        <small>Produto em confecção / aguardando</small>
                     </div>
                 </div>
             </div>
@@ -69,7 +69,6 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
         </div>
 
         <div class="card shadow border-0">
-            <!-- Cabeçalho reorganizado para empilhar no celular se necessário -->
             <div class="card-header bg-primary text-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 py-3">
                 <h3 class="mb-0 fs-5 fs-md-4 fw-bold">📋 Gestão de Orçamentos</h3>
                 <div class="d-flex gap-1">
@@ -92,34 +91,37 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
                                 <th scope="col" class="text-center">Status</th>
                                 <th scope="col" class="text-center">Ações de Status</th>
                                 <th scope="col" class="text-center">Envio Digital</th>
+                                <th scope="col" class="text-center">Excluir</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (mysqli_num_rows($resultado) > 0): ?>
                                 <?php while ($row = mysqli_fetch_assoc($resultado)): ?>
                                     <?php
-                                        $num_tel = preg_replace('/\D/', '', $row['telefone'] ?? '');
+                                        // Sanitização do telefone e definição do status predefinido
+                                        $num_tel = preg_replace('/[^0-9]/', '', (string)$row['telefone']);
+                                        if (strlen($num_tel) == 10 || strlen($num_tel) == 11) {
+                                            $num_tel = '55' . $num_tel;
+                                        }
+                                        
                                         $status_atual = !empty($row['status']) ? $row['status'] : 'Pendente';
+                                        $nome_cliente = $row['cliente_nome'];
+                                        $nome_item    = $row['nome_servico'];
+                                        $valor_total  = $row['valor_total'];
 
-                                        if ($status_atual == 'Aprovado') {
-                                            $texto_whats = "Olá " . urlencode($row['cliente_nome']) . ", seu orçamento para " . urlencode($row['nome_servico']) . " (R$ " . number_format($row['valor_total'], 2, ',', '.') . ") foi aprovado! Seu pedido já entrou em produção em nossa marcenaria.";
-                                           
-                                            $assunto_email = rawurlencode("Confirmação de Produção - Orçamento #" . $row['id']);
-                                            $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nConfirmamos o recebimento e aprovação do seu orçamento para o serviço: " . $row['nome_servico'] . ".\n\nSeu pedido já entrou em produção! Qualquer novidade sobre o andamento entraremos em contato.\n\nAtenciosamente,\nMarcenaria");
-                                        } elseif ($status_atual == 'Rejeitado') {
-                                            $texto_whats = "Olá " . urlencode($row['cliente_nome']) . ", confirmamos o cancelamento da proposta para " . urlencode($row['nome_servico']) . ". Permanecemos à disposição para futuros projetos!";
-                                           
-                                            $assunto_email = rawurlencode("Atualização de Orçamento - #" . $row['id']);
-                                            $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nInformamos que o orçamento para o serviço " . $row['nome_servico'] . " foi arquivado/cancelado.\n\nFicamos à disposição para futuros projetos.");
-                                        } else {
-                                            $texto_whats = "Olá " . urlencode($row['cliente_nome']) . ", segue o seu orçamento para " . urlencode($row['nome_servico']) . " no valor total de R$ " . number_format($row['valor_total'], 2, ',', '.') . ". Qualquer dúvida, estamos à disposição!";
-                                           
-                                            $assunto_email = rawurlencode("Orçamento Marcenaria - #" . $row['id']);
-                                            $corpo_email = rawurlencode("Olá " . $row['cliente_nome'] . ",\n\nConforme solicitado, segue o orçamento do serviço: " . $row['nome_servico'] . ".\nValor Total: R$ " . number_format($row['valor_total'], 2, ',', '.') . "\n\nQualquer dúvida, estamos à disposição.");
+                                        // Mesmas mensagens idênticas à página gerar_orcamento.php
+                                        if ($status_atual === 'Pendente') {
+                                            $texto_status = "Olá {$nome_cliente}! Seu pedido para '{$nome_item}' foi registrado como PENDENTE e já está sendo preparado pela nossa equipe. Valor total: R$ " . number_format($valor_total, 2, ',', '.') . ".";
+                                        } elseif ($status_atual === 'Aprovado') {
+                                            $texto_status = "Olá {$nome_cliente}! Seu pedido para '{$nome_item}' foi APROVADO e o produto já está PRONTO PARA A ENTREGA/RETIRADA!";
+                                        } else { // Negado
+                                            $texto_status = "Olá {$nome_cliente}. Infelizmente informamos que o seu pedido para '{$nome_item}' foi NEGADO. Entre em contato conosco para mais esclarecimentos.";
                                         }
 
-                                        $link_whats = "https://api.whatsapp.com/send?phone=55" . $num_tel . "&text=" . $texto_whats;
-                                        $link_email = "mailto:" . $row['email'] . "?subject=" . $assunto_email . "&body=" . $corpo_email;
+                                        $assunto_email = "Atualização de Orçamento - Marcenaria";
+
+                                        $link_whats = "https://api.whatsapp.com/send?phone=" . $num_tel . "&text=" . rawurlencode($texto_status);
+                                        $link_email = "mailto:" . $row['email'] . "?subject=" . rawurlencode($assunto_email) . "&body=" . rawurlencode($texto_status);
                                     ?>
                                     <tr>
                                         <th scope="row">#<?php echo $row['id']; ?></th>
@@ -136,45 +138,61 @@ $qtd_pendente = $row_pendentes['qtd'] ?? 0;
                                             <?php
                                                 if ($status_atual == 'Aprovado') {
                                                     echo '<span class="badge bg-success">Aprovado</span>';
-                                                } elseif ($status_atual == 'Rejeitado') {
-                                                    echo '<span class="badge bg-danger">Rejeitado</span>';
+                                                } elseif ($status_atual == 'Negado') {
+                                                    echo '<span class="badge bg-danger">Negado</span>';
                                                 } else {
                                                     echo '<span class="badge bg-warning text-dark">Pendente</span>';
                                                 }
                                             ?>
                                         </td>
+                                        <!-- Botões de Alteração de Status -->
                                         <td class="text-center">
                                             <div class="d-inline-flex gap-1">
-                                                <?php if ($status_atual != 'Aprovado'): ?>
-                                                    <a href="atualizar_status_orcamento.php?id=<?php echo $row['id']; ?>&status=Aprovado"
-                                                       class="btn btn-sm btn-success">Aprovar</a>
+                                                <?php if ($status_atual != 'Pendente'): ?>
+                                                    <a href="atualizar_status_orcamento.php?id=<?php echo $row['id']; ?>&status=Pendente"
+                                                       class="btn btn-sm btn-outline-warning text-dark" title="Mudar para Pendente">Pend.</a>
                                                 <?php endif; ?>
 
-                                                <?php if ($status_atual != 'Rejeitado'): ?>
-                                                    <a href="atualizar_status_orcamento.php?id=<?php echo $row['id']; ?>&status=Rejeitado"
-                                                       class="btn btn-sm btn-danger">Rejeitar</a>
+                                                <?php if ($status_atual != 'Aprovado'): ?>
+                                                    <a href="atualizar_status_orcamento.php?id=<?php echo $row['id']; ?>&status=Aprovado"
+                                                       class="btn btn-sm btn-success" title="Mudar para Aprovado">Aprovar</a>
+                                                <?php endif; ?>
+
+                                                <?php if ($status_atual != 'Negado'): ?>
+                                                    <a href="atualizar_status_orcamento.php?id=<?php echo $row['id']; ?>&status=Negado"
+                                                       class="btn btn-sm btn-danger" title="Mudar para Negado">Negar</a>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
+                                        <!-- Botões de Envio Digital -->
                                         <td class="text-center">
                                             <div class="d-inline-flex gap-1">
                                                 <?php if (!empty($num_tel)): ?>
-                                                    <a href="<?php echo $link_whats; ?>" target="_blank" class="btn btn-sm btn-outline-success" title="Enviar orçamento via WhatsApp">
-                                                        💬 WhatsApp
+                                                    <a href="<?php echo $link_whats; ?>" target="_blank" class="btn btn-sm btn-success" title="Enviar orçamento via WhatsApp">
+                                                        <i class="bi bi-whatsapp"></i>
                                                     </a>
                                                 <?php endif; ?>
                                                 <?php if (!empty($row['email'])): ?>
-                                                    <a href="<?php echo $link_email; ?>" class="btn btn-sm btn-outline-primary" title="Enviar orçamento por E-mail">
-                                                        ✉️ E-mail
+                                                    <a href="<?php echo $link_email; ?>" class="btn btn-sm btn-primary" title="Enviar orçamento por E-mail">
+                                                        <i class="bi bi-envelope"></i>
                                                     </a>
                                                 <?php endif; ?>
                                             </div>
+                                        </td>
+                                        <!-- Botão de Exclusão -->
+                                        <td class="text-center">
+                                            <a href="excluir_orcamento.php?id=<?php echo $row['id']; ?>" 
+                                               class="btn btn-sm btn-outline-danger" 
+                                               onclick="return confirm('Tem certeza que deseja excluir o orçamento #<?php echo $row['id']; ?>?');" 
+                                               title="Excluir Orçamento">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted py-4">Nenhum orçamento registrado até o momento.</td>
+                                    <td colspan="10" class="text-center text-muted py-4">Nenhum orçamento registrado até o momento.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
