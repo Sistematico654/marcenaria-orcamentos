@@ -44,42 +44,48 @@ if ($headers && strpos($headers[0], '200')) {
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suíte de Testes Automatizados - Marcenaria</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>🧪 Relatório de Execução de Testes</h2>
-            <a href="index.php" class="btn btn-secondary">Voltar ao Menu</a>
+    <!-- Ajustado espaçamento responsivo com py-3 e py-md-5 -->
+    <div class="container py-3 py-md-5">
+        
+        <!-- Cabeçalho reorganizado para empilhar em telas pequenas se necessário -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <h2 class="fs-4 fs-md-3 fw-bold mb-0">🧪 Relatório de Execução de Testes</h2>
+            <a href="index.php" class="btn btn-secondary btn-sm align-self-start align-self-md-auto">Voltar ao Menu</a>
         </div>
 
-        <div class="card shadow">
-            <div class="card-body">
-                <table class="table table-striped align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Caso de Teste</th>
-                            <th>Status</th>
-                            <th>Detalhes / Observações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($testes as $t): ?>
+        <div class="card shadow border-0">
+            <div class="card-body p-3 p-md-4">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0" aria-label="Tabela de Relatório de Testes">
+                        <thead class="table-dark">
                             <tr>
-                                <td class="fw-bold"><?php echo $t['nome']; ?></td>
-                                <td>
-                                    <?php if ($t['status'] == 'PASSOU'): ?>
-                                        <span class="badge bg-success">✅ PASSOU</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger">❌ FALHOU</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo $t['detalhe']; ?></td>
+                                <th scope="col">Caso de Teste</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Detalhes / Observações</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($testes as $t): ?>
+                                <tr>
+                                    <td class="fw-bold"><?php echo $t['nome']; ?></td>
+                                    <td>
+                                        <?php if ($t['status'] == 'PASSOU'): ?>
+                                            <span class="badge bg-success">✅ PASSOU</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger">❌ FALHOU</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo $t['detalhe']; ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
